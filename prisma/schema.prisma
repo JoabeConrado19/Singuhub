@@ -1,0 +1,65 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Company {
+  id          Int        @id @default(autoincrement())
+  name        String
+  address     String?
+  location    Unsupported("GEOGRAPHY(Point, 4326)") 
+  type        String    @default("warehouse") 
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  packagesOrigin      Package[] @relation("OriginPackages")
+  packagesDestination Package[] @relation("DestinationPackages")
+
+  checkpoints         Checkpoint[] @relation("CompanyCheckpoints")
+}
+
+model Package {
+  id             Int             @id @default(autoincrement())
+  trackingCode   String          @unique
+  name           String          @default("Package name") 
+  description    String?
+  value          Float           @default(0) 
+  weight         Float           @default(0) 
+  originId       Int
+  destinationId  Int
+  currentStatus  String          @default("Created")
+  estimatedDelivery String?      
+  
+  stripeSessionId    String?     @unique 
+  stripePaymentStatus String?    @default("pending")
+  shippingFee        Float?      
+  
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  
+  origin         Company         @relation("OriginPackages", fields: [originId], references: [id])
+  destination    Company         @relation("DestinationPackages", fields: [destinationId], references: [id])
+
+  checkpoints    Checkpoint[]
+}
+
+model Checkpoint {
+  id           Int       @id @default(autoincrement())
+  packageId    Int
+  companyId    Int
+  status       String
+  location     Unsupported("GEOGRAPHY(Point, 4326)")
+  photoUrl     String?   
+  verifiedByAI Boolean   @default(false)
+  blockchainTx String?   
+  createdAt    DateTime  @default(now())
+
+  package      Package   @relation(fields: [packageId], references: [id])
+  company      Company   @relation("CompanyCheckpoints", fields: [companyId], references: [id])
+}

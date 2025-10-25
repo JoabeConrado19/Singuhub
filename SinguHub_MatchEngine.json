@@ -23,7 +23,7 @@
         "conditions": {
           "string": [
             {
-              "value1": "={{ $json.body[0].dados.empresa }}",
+              "value1": "={{ $json.body[0].dados.empresa.empresa_nome }}",
               "operation": "isNotEmpty"
             }
           ]
@@ -43,7 +43,7 @@
         "conditions": {
           "string": [
             {
-              "value1": "={{ $json.body[0].dados.candidato }}",
+              "value1": "={{ $json.body[0].dados.candidato.nome }}",
               "operation": "isNotEmpty"
             }
           ]
@@ -67,15 +67,15 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        16,
-        1248
+        -96,
+        1264
       ],
       "id": "d19fcd6b-3791-4953-9a01-d6f258885c24",
       "name": "Merge"
     },
     {
       "parameters": {
-        "jsCode": "// =========================================================\n// 🧩 Extrai apenas os dados da empresa do JSON recebido\n// =========================================================\nconst input = $input.all(); // pega todos os itens (lista)\nconst output = [];\n\nfor (const item of input) {\n  const empresa = item.json?.dados?.empresa;\n\n  // Verifica se existe empresa dentro dos dados\n  if (empresa) {\n    output.push({ json: empresa });\n  }\n}\n\n// Se não houver empresa, retorna um aviso\nif (output.length === 0) {\n  return [{ json: { erro: \"Nenhum dado de empresa encontrado\" } }];\n}\n\nreturn output;\n"
+        "jsCode": "// =========================================================\n// 🧩 Extrai apenas os dados da empresa do JSON recebido\n// =========================================================\nconst input = $input.all(); // pega todos os itens da entrada\nconst output = [];\n\ninput.forEach(item => {\n  const empresa = item.json?.body?.[0]?.dados?.empresa; // percorre o body do item\n  if (empresa) {\n    output.push({ json: empresa });\n  }\n});\n\n// Retorna aviso caso não haja dados de empresa\nif (output.length === 0) {\n  output.push({ json: { erro: \"Nenhum dado de empresa encontrado\" } });\n}\n\nreturn output;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -88,7 +88,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// =========================================================\n// 👤 Extrai apenas os dados do candidato do JSON recebido\n// =========================================================\nconst input = $input.all(); // pega todos os itens recebidos\nconst output = [];\n\nfor (const item of input) {\n  const candidato = item.json?.dados?.candidato;\n\n  // Verifica se o campo existe\n  if (candidato) {\n    output.push({ json: candidato });\n  }\n}\n\n// Se não houver candidato, retorna aviso\nif (output.length === 0) {\n  return [{ json: { erro: \"Nenhum dado de candidato encontrado\" } }];\n}\n\nreturn output;\n"
+        "jsCode": "const input = $input.all(); // Pega todos os itens recebidos\nconst output = [];\n\nfor (const item of input) {\n  // Acessa o candidato dentro do primeiro elemento do array body\n  const candidato = item.json?.body?.[0]?.dados?.candidato;\n\n  if (candidato) {\n    output.push({ json: candidato });\n  }\n}\n\nif (output.length === 0) {\n  return [{ json: { erro: \"Nenhum dado de candidato encontrado\" } }];\n}\n\nreturn output;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -98,40 +98,6 @@
       ],
       "id": "bd92025e-ee41-4346-8bbe-3f84010e1c34",
       "name": "Data_candidato"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=Você é um assistente de recrutamento especializado em análise de compatibilidade entre candidatos e empresas de tecnologia.\n\nA seguir estão os dados de compatibilidade entre o candidato e a vaga:\n\n{{ JSON.stringify($json, null, 2) }}\n\nCom base nas informações acima, gere **dois blocos de feedback** distintos:\n\n---\n\n🎯 **1️⃣ Feedback para o CANDIDATO (mensagem amigável e construtiva):**\n- Comece com um tom positivo, reconhecendo os pontos fortes (ex: boas habilidades técnicas, boa aderência cultural).\n- Aponte **as principais lacunas** que ele precisa desenvolver (ex: “precisa fortalecer conhecimentos em bancos de dados e Big Data”).\n- Sugira **3 treinamentos específicos** que ajudem a preencher essas lacunas, com links da nossa plataforma de cursos:\n  - Estrutura de Banco de Dados → [https://singuacademy.com/curso/bancos-de-dados](https://singuacademy.com/curso/bancos-de-dados)\n  - Fundamentos de Big Data → [https://singuacademy.com/curso/big-data](https://singuacademy.com/curso/big-data)\n  - Inteligência Artificial Aplicada → [https://singuacademy.com/curso/inteligencia-artificial](https://singuacademy.com/curso/inteligencia-artificial)\n- Termine com uma frase inspiradora (ex: “Cada aprendizado aproxima você da vaga ideal!”).\n\n---\n\n🏢 **2️⃣ Feedback para a EMPRESA (avaliação técnica e comportamental):**\n- Resuma o **nível de aderência técnica**, destacando se o candidato domina as ferramentas principais (ex: Python, SQL, Databricks, Azure).\n- Analise o **fit cultural**, comparando com os valores da empresa.\n- Indique um **nível de recomendação**:\n  - “Recomendado para próxima fase” (≥70%)\n  - “Recomendar após desenvolvimento” (entre 40% e 69%)\n  - “Não recomendado no momento” (<40%)\n- Adicione uma breve **recomendação de acompanhamento** (ex: “sugerimos convidar o candidato para o programa interno de formação em dados”).\n\n---\n\nA resposta deve estar em formato JSON estruturado, assim:\n\n{\n  \"feedback_candidato\": {\n    \"resumo\": \"...\",\n    \"melhorias\": [\"...\", \"...\"],\n    \"treinamentos_recomendados\": [\n      {\n        \"titulo\": \"Estrutura de Banco de Dados\",\n        \"link\": \"https://singuacademy.com/curso/bancos-de-dados\"\n      },\n      {\n        \"titulo\": \"Fundamentos de Big Data\",\n        \"link\": \"https://singuacademy.com/curso/big-data\"\n      },\n      {\n        \"titulo\": \"Inteligência Artificial Aplicada\",\n        \"link\": \"https://singuacademy.com/curso/inteligencia-artificial\"\n      }\n    ]\n  },\n  \"feedback_empresa\": {\n    \"resumo\": \"...\",\n    \"avaliacao_tecnica\": \"...\",\n    \"avaliacao_cultural\": \"...\",\n    \"recomendacao\": \"Recomendado / Requer Desenvolvimento / Não Recomendado\",\n    \"acao_sugerida\": \"...\"\n  }\n}\n",
-        "batching": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
-      "position": [
-        400,
-        1248
-      ],
-      "id": "7145ef2d-033b-4576-9676-0a5a41687172",
-      "name": "Basic LLM Chain"
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1,
-      "position": [
-        400,
-        1408
-      ],
-      "id": "d740885d-1a06-4046-9dcc-4b7aa2f9b3be",
-      "name": "Google Gemini Chat Model",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "o246sJ0WQ3qtx8Ck",
-          "name": "Google Gemini(PaLM) Api account 31"
-        }
-      }
     },
     {
       "parameters": {
@@ -148,13 +114,13 @@
     },
     {
       "parameters": {
-        "jsCode": "// =========================================================\n// 🤖 Agente de Match Inteligente - Empresa x Candidato\n// =========================================================\n// Entrada esperada: 1 item JSON contendo dados combinados (empresa + candidato)\n\nconst input = $input.item.json;\n\n// -----------------------------------------------\n// 1️⃣ Compatibilidade Técnica (peso: 40%)\n// -----------------------------------------------\nconst requisitosTecnicos = input.requisitos?.competencias_tecnicas || [];\nconst habilidades = input.habilidades || [];\nconst matchTecnico =\n  requisitosTecnicos.length > 0\n    ? (habilidades.filter(h => requisitosTecnicos.map(r => r.toLowerCase()).includes(h.toLowerCase())).length /\n      requisitosTecnicos.length) * 100\n    : 0;\n\n// -----------------------------------------------\n// 2️⃣ Compatibilidade Comportamental (peso: 20%)\n// -----------------------------------------------\nconst competenciasComportamentais = input.requisitos?.competencias_comportamentais || [];\nconst comportamentaisCand = [\"Comunicação\", \"Colaboração\", \"Autonomia\"]; // pode vir de perfil do candidato\nconst matchComportamental =\n  competenciasComportamentais.length > 0\n    ? (comportamentaisCand.filter(c => competenciasComportamentais.map(r => r.toLowerCase()).includes(c.toLowerCase())).length /\n      competenciasComportamentais.length) * 100\n    : 0;\n\n// -----------------------------------------------\n// 3️⃣ Fit Cultural (peso: 30%)\n// -----------------------------------------------\nconst bigFiveVaga = input.perfil_cultural?.big_five_desejado || {};\nconst bigFiveCand = input.fit_cultural?.big_five || {};\nconst chavesBigFive = [\"abertura\", \"consciencia\", \"extroversao\", \"amabilidade\", \"neuroticismo\"];\n\nlet somaSimilaridade = 0;\nchavesBigFive.forEach(chave => {\n  const vagaVal = bigFiveVaga[chave] ?? 0;\n  const candVal = bigFiveCand[chave] ?? 0;\n  somaSimilaridade += 1 - Math.abs(vagaVal - candVal); // quanto mais próximo, maior o match\n});\nconst matchCultural = (somaSimilaridade / chavesBigFive.length) * 100;\n\n// -----------------------------------------------\n// 4️⃣ Geolocalização / Distância (peso: 10%)\n// -----------------------------------------------\nconst toRad = v => (v * Math.PI) / 180;\nconst R = 6371; // km\nconst lat1 = input.localizacao?.latitude ?? 0;\nconst lon1 = input.localizacao?.longitude ?? 0;\nconst lat2 = input.latitude ?? 0;\nconst lon2 = input.longitude ?? 0;\n\nconst dLat = toRad(lat2 - lat1);\nconst dLon = toRad(lon2 - lon1);\nconst a =\n  Math.sin(dLat / 2) * Math.sin(dLat / 2) +\n  Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);\nconst distancia = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));\n\nlet matchLocal = 100;\nif (input.raio_busca_km && distancia > input.raio_busca_km) {\n  matchLocal = Math.max(0, 100 - ((distancia - input.raio_busca_km) * 2));\n}\n\n// -----------------------------------------------\n// 5️⃣ Cálculo Final do Score\n// -----------------------------------------------\nconst score =\n  matchTecnico * 0.4 +\n  matchComportamental * 0.2 +\n  matchCultural * 0.3 +\n  matchLocal * 0.1;\n\n// -----------------------------------------------\n// 6️⃣ Resultado formatado\n// -----------------------------------------------\nreturn [\n  {\n    json: {\n      empresa: input.empresa_nome,\n      candidato: input.nome,\n      cargo: input.titulo,\n      score_total: Math.round(score),\n      detalhes: {\n        tecnico: Math.round(matchTecnico),\n        comportamental: Math.round(matchComportamental),\n        cultural: Math.round(matchCultural),\n        localizacao: Math.round(matchLocal),\n        distancia_km: Number(distancia.toFixed(2))\n      },\n      status: score >= 70 ? \"ALTA COMPATIBILIDADE\" : score >= 40 ? \"MÉDIA\" : \"BAIXA\"\n    }\n  }\n];\n"
+        "jsCode": "// Pega o único objeto de input (empresa + candidato juntos)\nconst dados = $input.item.json || {};\n\n// Separar dados da empresa\nconst empresa = {\n  empresa_id: dados.empresa_id,\n  empresa_nome: dados.empresa_nome,\n  titulo: dados.titulo,\n  descricao: dados.descricao,\n  requisitos: dados.requisitos,\n  perfil_cultural: dados.perfil_cultural,\n  localizacao: dados.localizacao,\n  raio_busca_km: dados.raio_busca_km,\n  modo_trabalho: dados.modo_trabalho,\n  salario_min: dados.salario_min,\n  salario_max: dados.salario_max,\n  setor: dados.setor,\n  tipo_contrato: dados.tipo_contrato,\n  status: dados.status,\n  publicada_por: dados.publicada_por\n};\n\n// Separar dados do candidato\nconst candidato = {\n  nome: dados.nome,\n  pronome: dados.pronome,\n  data_nascimento: dados.data_nascimento,\n  email: dados.email,\n  telefone: dados.telefone,\n  foto_perfil: dados.foto_perfil,\n  pretensao_salarial: dados.pretensao_salarial,\n  linkedin: dados.linkedin,\n  curriculo: dados.curriculo,\n  cep: dados.cep,\n  pais: dados.pais,\n  estado: dados.estado,\n  cidade: dados.cidade,\n  latitude: dados.latitude,\n  longitude: dados.longitude,\n  identidade_genero: dados.identidade_genero,\n  cor: dados.cor,\n  possui_deficiencia: dados.possui_deficiencia,\n  formacoes: dados.formacoes,\n  experiencias: dados.experiencias,\n  habilidades: dados.habilidades,\n  preferencias: dados.preferencias,\n  fit_cultural: dados.fit_cultural,\n  consentimento: dados.consentimento\n};\n\n// 1️⃣ Compatibilidade Técnica (peso: 40%)\nconst requisitosTecnicos = empresa.requisitos || [];\nconst habilidades = candidato.habilidades || [];\n\nconst matchTecnico =\n  requisitosTecnicos.length > 0\n    ? (habilidades.filter(h =>\n        requisitosTecnicos.map(r => r.toLowerCase()).includes(h.toLowerCase())\n      ).length /\n      requisitosTecnicos.length) * 100\n    : 0;\n\n// 2️⃣ Compatibilidade Comportamental (peso: 20%)\nconst competenciasComportamentais = empresa.requisitos?.competencias_comportamentais || [];\nconst comportamentaisCand = candidato.competencias_comportamentais || [\"Comunicação\", \"Colaboração\", \"Autonomia\"];\n\nconst matchComportamental =\n  competenciasComportamentais.length > 0\n    ? (comportamentaisCand.filter(c =>\n        competenciasComportamentais.map(r => r.toLowerCase()).includes(c.toLowerCase())\n      ).length /\n      competenciasComportamentais.length) * 100\n    : 0;\n\n// 3️⃣ Fit Cultural (peso: 30%)\nconst bigFiveVaga = empresa.perfil_cultural?.big_five_desejado || {};\nconst bigFiveCand = candidato.fit_cultural?.big_five || {};\n\nconst chavesBigFive = [\"abertura\", \"consciencia\", \"extroversao\", \"amabilidade\", \"neuroticismo\"];\nlet somaSimilaridade = 0;\n\nchavesBigFive.forEach(chave => {\n  const vagaVal = bigFiveVaga[chave] ?? 0;\n  const candVal = bigFiveCand[chave] ?? 0;\n  somaSimilaridade += 1 - Math.abs(vagaVal - candVal);\n});\n\nconst matchCultural = (somaSimilaridade / chavesBigFive.length) * 100;\n\n// 4️⃣ Geolocalização / Distância (peso: 10%)\nconst toRad = v => (v * Math.PI) / 180;\nconst R = 6371;\nconst lat1 = empresa.localizacao?.latitude ?? 0;\nconst lon1 = empresa.localizacao?.longitude ?? 0;\nconst lat2 = candidato.latitude ?? 0;\nconst lon2 = candidato.longitude ?? 0;\n\nconst dLat = toRad(lat2 - lat1);\nconst dLon = toRad(lon2 - lon1);\n\nconst a =\n  Math.sin(dLat / 2) * Math.sin(dLat / 2) +\n  Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *\n  Math.sin(dLon / 2) * Math.sin(dLon / 2);\n\nconst distancia = 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));\n\nlet matchLocal = 100;\nif (empresa.raio_busca_km && distancia > empresa.raio_busca_km) {\n  matchLocal = Math.max(0, 100 - ((distancia - empresa.raio_busca_km) * 2));\n}\n\n// 5️⃣ Score total\nconst score =\n  matchTecnico * 0.4 +\n  matchComportamental * 0.2 +\n  matchCultural * 0.3 +\n  matchLocal * 0.1;\n\n// 6️⃣ Monta resultado\nconst resultadoMatch = {\n  empresa: empresa.empresa_nome,\n  candidato: candidato.nome,\n  cargo: empresa.titulo,\n  score_total: Math.round(score),\n  detalhes: {\n    tecnico: Math.round(matchTecnico),\n    comportamental: Math.round(matchComportamental),\n    cultural: Math.round(matchCultural),\n    localizacao: Math.round(matchLocal),\n    distancia_km: Number(distancia.toFixed(2))\n  },\n  status: score >= 70 ? \"ALTA COMPATIBILIDADE\" : score >= 40 ? \"MÉDIA\" : \"BAIXA\"\n};\n\n// 7️⃣ Retorna resultado e dados separados\nreturn [\n  { json: { match: resultadoMatch } },\n  { json: { candidato } },\n  { json: { empresa } }\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        192,
-        1248
+        48,
+        1264
       ],
       "id": "3170c152-0b14-4099-9f99-aef6e0b91129",
       "name": "Modelagem"
@@ -184,6 +150,54 @@
         1248
       ],
       "id": "5e5332e8-b3b9-4045-a209-0eca2ade5750"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um assistente de recrutamento especializado em análise de compatibilidade entre candidatos e vagas em tecnologia e logística.  \nSeu papel é comparar competências, experiências, formação e perfil comportamental do candidato com os requisitos técnicos, culturais e logísticos da vaga, gerando feedbacks objetivos, empáticos e estruturados.\n\nRegras de análise:\n1. Utilize somente os critérios da vaga fornecidos no JSON: requisitos técnicos, habilidades, idioma, localização, modalidade de trabalho e perfil cultural.  \n2. Identifique pontos fortes do candidato que atendem ou excedem os critérios da vaga.  \n3. Aponte lacunas reais, explicando de forma empática o que pode ser desenvolvido.  \n4. Sugira apenas os treinamentos relevantes da lista abaixo, se houver lacunas que possam ser desenvolvidas.  \n5. Inclua o link do treinamento sugerido, usando o formato: https://singuacademy.com/curso/[nome-do-curso].  \n6. Produza JSON estruturado, sem texto extra, explicações ou markdown.\n\nInformações para análise:\n- Vaga: {{ $json.empresa }}  \n- Candidato: {{ $json.candidato }}  \n\nTreinamentos (apenas indicar se necessário):\n- https://singuacademy.com/curso\n\nFormato do feedback:\n\n1️⃣ Feedback para o CANDIDATO ({{ $json.candidato.nome }})\n- Comece com tom positivo, destacando pontos fortes e experiências plus relacionadas à vaga.  \n- Apresente lacunas reais identificadas em relação aos critérios da vaga.  \n- Sugira apenas os treinamentos relevantes (até 3), com link direto para cada curso.  \n- Finalize com uma mensagem motivacional.\n\n2️⃣ Feedback para a EMPRESA\n- Resumo da aderência geral entre candidato e vaga.  \n- Avaliação técnica baseada nos critérios da vaga (Domínio / Intermediário / Básico).  \n- Avaliação de fit cultural e alinhamento com os valores da empresa.  \n- Indicação de recomendação baseada na compatibilidade total:\n  - ≥70% → “Recomendado para próxima fase”  \n  - 40–69% → “Recomendar após desenvolvimento”  \n  - <40% → “Não recomendado no momento”  \n- Sugestão de ação de acompanhamento (ex.: treinamento, monitoramento ou próxima etapa).  \n\nSaída obrigatória em JSON (sem explicações, sem markdown, sem texto adicional):\n\n{\n  \"feedback_candidato\": {\n    \"resumo\": \"Mensagem positiva destacando pontos fortes e experiências plus.\",\n    \"melhorias\": [\n      \"Lacuna 1\",\n      \"Lacuna 2\",\n      \"Lacuna 3\"\n    ],\n    \"treinamentos_recomendados\": [\n      {\n        \"titulo\": \"Título do treinamento necessário\",\n        \"link\": \"https://singuacademy.com/curso/[nome-do-curso]\"\n      }\n    ]\n  },\n  \"feedback_empresa\": {\n    \"resumo\": \"Síntese clara do match candidato-vaga.\",\n    \"avaliacao_tecnica\": \"Descrição do domínio técnico do candidato nas principais ferramentas exigidas pela vaga.\",\n    \"avaliacao_cultural\": \"Análise do alinhamento do candidato com os valores da empresa.\",\n    \"recomendacao\": \"Recomendado / Requer Desenvolvimento / Não Recomendado\",\n    \"acao_sugerida\": \"Breve sugestão de acompanhamento.\"\n  }\n}\n",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        416,
+        1280
+      ],
+      "id": "62930d84-c0de-495e-be28-47974bc45ab3",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        368,
+        1456
+      ],
+      "id": "7231adc8-cf81-42ad-b7dd-939d7083f2f2",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "o246sJ0WQ3qtx8Ck",
+          "name": "Google Gemini(PaLM) Api account 31"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\n\nconst match = input[0]?.json?.match || {};\nconst candidato = input[1]?.json?.candidato || {};\nconst empresa = input[2]?.json?.empresa || {};\n\nreturn [\n  {\n    json: {\n      match,\n      candidato,\n      empresa\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        1280
+      ],
+      "id": "7a193835-c28f-4dea-b6c2-3b6bf04d3b6d",
+      "name": "Code in JavaScript"
     }
   ],
   "pinData": {},
@@ -254,28 +268,6 @@
         ]
       ]
     },
-    "Google Gemini Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Basic LLM Chain": {
-      "main": [
-        [
-          {
-            "node": "Data_array",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "normalização": {
       "main": [
         [
@@ -296,7 +288,7 @@
       "main": [
         [
           {
-            "node": "Basic LLM Chain",
+            "node": "Code in JavaScript",
             "type": "main",
             "index": 0
           }
@@ -305,9 +297,36 @@
     },
     "Data_array": {
       "main": [
+        []
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
         [
           {
-            "node": "Resposta",
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Data_array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
             "type": "main",
             "index": 0
           }
@@ -319,7 +338,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "cc332358-1e79-45fb-b2f6-33c75c6eb350",
+  "versionId": "e6b3e5d4-e7fb-4888-a654-6217d9500421",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "1dac8b887eea51519ca5afc1ee67507bd3d4d4d6a557d40e0f9cb92339e1953c"

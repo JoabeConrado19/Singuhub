@@ -1,98 +1,286 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🚀 SinguHub Dev API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API desenvolvida em **NestJS** para integração entre **Stripe Checkout** e **Blockchain Ethereum** (via Ganache).  
+O projeto permite criar sessões de pagamento, salvar certificados em blockchain e consultar certificados armazenados.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🧩 Tecnologias Principais
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **NestJS 11** — Framework Node.js modular e escalável  
+- **Ethers.js** — Conexão e interação com contratos Solidity  
+- **Solidity 0.8.x** — Linguagem para contratos inteligentes  
+- **Ganache** — Blockchain local para testes  
+- **Stripe API** — Geração de sessões de checkout  
+- **Hardhat** — Build, teste e deploy dos contratos  
+- **TypeScript** — Tipagem estática e segurança no desenvolvimento  
 
-## Project setup
+---
 
-```bash
-$ npm install
+## 📁 Estrutura do Projeto
+
+```
+.
+├── src/
+│   ├── app.module.ts
+│   ├── app.controller.ts
+│   ├── blockchain/
+│   │   ├── blockchain.controller.ts
+│   │   ├── blockchain.service.ts
+│   │   └── blockchain.dto.ts
+│   └── package/
+│       └── package.module.ts
+├── contract.sol
+├── buildContract.js
+├── .env
+├── package.json
+├── tsconfig.json
+└── nest-cli.json
 ```
 
-## Compile and run the project
+---
+
+## ⚙️ Configuração do Ambiente
+
+### 1️⃣ Pré-requisitos
+
+- Node.js 18+
+- NPM ou Yarn
+- Ganache (GUI ou CLI)
+- Conta Stripe com chave `SECRET_KEY`
+- Hardhat instalado globalmente (`npm install -g hardhat`)
+
+---
+
+### 2️⃣ Clonar e instalar dependências
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+git clone https://github.com/seuusuario/singuhub-dev-api.git
+cd singuhub-dev-api/test
+npm install
 ```
 
-## Run tests
+---
+
+### 3️⃣ Configurar variáveis de ambiente
+
+Crie o arquivo `.env` na raiz do projeto com:
+
+```env
+STRIPE_SECRET_KEY=sk_test_sua_chave_aqui
+GANACHE_RPC_URL=http://127.0.0.1:7545
+PRIVATE_KEY=0xSEU_PRIVATE_KEY_GANACHE
+CONTRACT_ADDRESS=0xEnderecoContratoDepoisDoDeploy
+```
+
+---
+
+## 🧠 Blockchain (Solidity + Hardhat + Ganache)
+
+### 1️⃣ Compilar o contrato
+
+O contrato está no arquivo `contract.sol`.
+
+Para compilar manualmente:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npx hardhat compile
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Ou via script `buildContract.js` (compila com `solc` e gera `contractData.json`):
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+node buildContract.js
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+### 2️⃣ Iniciar o Ganache
 
-Check out a few resources that may come in handy when working with NestJS:
+Abra o Ganache (GUI) ou CLI:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+ganache --port 7545
+```
 
-## Support
+Anote:
+- O endereço RPC (ex: `http://127.0.0.1:7545`)
+- Uma chave privada de uma conta
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+### 3️⃣ Fazer o Deploy do Contrato
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Crie um script `deploy.js` (caso não exista) com:
 
-## License
+```js
+const { ethers } = require("ethers");
+const fs = require("fs");
+const contractData = require("./contractData.json");
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+const provider = new ethers.JsonRpcProvider(process.env.GANACHE_RPC_URL);
+const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+
+(async () => {
+  const factory = new ethers.ContractFactory(contractData.abi, contractData.bytecode, wallet);
+  const contract = await factory.deploy();
+  await contract.waitForDeployment();
+  console.log("Contrato implantado em:", await contract.getAddress());
+})();
+```
+
+Executar:
+```bash
+node deploy.js
+```
+
+Salve o endereço exibido em `.env` → `CONTRACT_ADDRESS`.
+
+---
+
+## 💳 Integração com Stripe
+
+### 1️⃣ Criar sessão de checkout
+
+**Rota:** `POST /checkout`
+
+**Exemplo de requisição:**
+```json
+{
+  "priceId": "price_123456789",
+  "successUrl": "http://localhost:3000/success",
+  "cancelUrl": "http://localhost:3000/cancel"
+}
+```
+
+**Resposta:**
+```json
+{
+  "url": "https://checkout.stripe.com/pay/cs_test_..."
+}
+```
+
+---
+
+## 🔗 Rotas Blockchain
+
+### 🪪 Salvar certificado
+
+**Rota:** `POST /blockchain/certificate`
+
+**Body:**
+```json
+{
+  "id": "1234",
+  "owner": "Joabe Borges",
+  "data": "Certificado concluído em 2025-10-25"
+}
+```
+
+**Retorno:**
+```json
+{
+  "transactionHash": "0xabc123..."
+}
+```
+
+---
+
+### 🔍 Buscar certificado
+
+**Rota:** `GET /blockchain/certificate/:id`
+
+**Resposta:**
+```json
+{
+  "id": "1234",
+  "owner": "Joabe Borges",
+  "data": "Certificado concluído em 2025-10-25"
+}
+```
+
+---
+
+## 🧪 Executar a Aplicação
+
+### Ambiente de desenvolvimento
+
+```bash
+npm run start:dev
+```
+
+A API ficará disponível em:
+
+```
+http://localhost:3000
+```
+
+---
+
+### Build de produção
+
+```bash
+npm run build
+npm run start:prod
+```
+
+---
+
+## 🖼️ Prints e Demonstrações
+
+### 💻 Tela de Checkout Stripe
+![alt text](image-1.png)
+### 🧾 Certificado registrado na Blockchain
+![alt text](image.png)
+---
+
+## 🧱 Estrutura Modular (NestJS)
+
+| Módulo | Descrição |
+|--------|------------|
+| `AppModule` | Módulo raiz que carrega os demais |
+| `BlockchainModule` | Lida com operações no contrato Solidity |
+| `PackageModule` | Integração com Stripe e controle de checkout |
+
+---
+
+## 🧰 Scripts úteis
+
+| Comando | Descrição |
+|----------|------------|
+| `npm run start:dev` | Inicia o servidor em modo watch |
+| `npm run build` | Compila o projeto |
+| `npm run start:prod` | Executa a versão buildada |
+| `node buildContract.js` | Compila o contrato Solidity |
+| `node deploy.js` | Realiza o deploy no Ganache |
+| `npm run lint` | Corrige formatação automática |
+| `npm run test` | Executa testes unitários (Jest) |
+
+---
+
+## 🛡️ Boas Práticas
+
+- Sempre utilize uma nova conta no Ganache para testes.
+- Nunca compartilhe a `PRIVATE_KEY` publicamente.
+- Teste o checkout com a [chave de teste da Stripe](https://stripe.com/docs/testing).
+
+---
+
+## 🧑‍💻 Autor
+
+**Joabe Borges**  
+Desenvolvedor Full Stack / Blockchain  
+📧 contato: [joabe.conrado19@gmail.com]()
+
+---
+
+
+
+## 📂 Consultas de certificados Singuhub na blockchain
+
+
+![alt text](image-2.png)
+---
+
+🟢 **Tudo pronto!**  
+Agora você tem um backend NestJS integrado com Stripe e blockchain Ethereum rodando localmente com Ganache 🚀

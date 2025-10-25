@@ -19,7 +19,7 @@ export class EnrollmentController {
   private stripe: Stripe;
 
   constructor(private readonly enrollmentService: EnrollmentService) {
-    this.stripe = new Stripe("sk_test_51SLrhzPwvA7hd9qxCDw8KdQ2CzEIn0QwQwg7jYrw5RF6byqFUWtEgGhat6zsc989zaFHAzJfLeiBWv1j6Iw8E67h006fxGuy8j");
+    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   }
 
   @Post('checkout')

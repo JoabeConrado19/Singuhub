@@ -9,11 +9,15 @@ import { CertificateService } from 'src/blockchain/blockchain.service';
 import { PackageModule } from 'src/package/package.module';
 import { EnrollmentController } from 'src/package/package.controller';
 import { EnrollmentService } from 'src/package/package.service';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     BlockchainModule,
-    PackageModule
+    PackageModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
   ],
   controllers: [AppController, CertificateController, EnrollmentController],
   providers: [AppService, CertificateService, EnrollmentService],

@@ -2,7 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class EnrollmentService {
-  private readonly stripeSecretKey = "sk_test_51SLrhzPwvA7hd9qxCDw8KdQ2CzEIn0QwQwg7jYrw5RF6byqFUWtEgGhat6zsc989zaFHAzJfLeiBWv1j6Iw8E67h006fxGuy8j";
+  private readonly stripeSecretKey = process.env.STRIPE_SECRET_KEY;
   private readonly stripeApiUrl = "https://api.stripe.com/v1";
 
   async createCheckoutSession(

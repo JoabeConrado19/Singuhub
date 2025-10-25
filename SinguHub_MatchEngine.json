@@ -1,0 +1,329 @@
+{
+  "name": "SinguHub_MatchEngine",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "singuhub-cadastro",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "f80c383e-06f6-4f30-8839-bdc167998f9b",
+      "name": "Webhook - SinguHub Cadastro",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        1264
+      ],
+      "webhookId": "27ad53ba-5c94-482f-8741-1adde527da27"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body[0].dados.empresa }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "name": "Empressa",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        1168
+      ],
+      "id": "6758f5d6-5cb1-43d9-89b5-5840b8666275"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body[0].dados.candidato }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "name": "Candidato",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        1360
+      ],
+      "id": "410519e2-7ab1-4ffe-8601-eafe49d7e706"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        16,
+        1248
+      ],
+      "id": "d19fcd6b-3791-4953-9a01-d6f258885c24",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =========================================================\n// 🧩 Extrai apenas os dados da empresa do JSON recebido\n// =========================================================\nconst input = $input.all(); // pega todos os itens (lista)\nconst output = [];\n\nfor (const item of input) {\n  const empresa = item.json?.dados?.empresa;\n\n  // Verifica se existe empresa dentro dos dados\n  if (empresa) {\n    output.push({ json: empresa });\n  }\n}\n\n// Se não houver empresa, retorna um aviso\nif (output.length === 0) {\n  return [{ json: { erro: \"Nenhum dado de empresa encontrado\" } }];\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        1168
+      ],
+      "id": "3837af2c-90d4-4380-b34f-d10cd65af58c",
+      "name": "Data_empressa"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =========================================================\n// 👤 Extrai apenas os dados do candidato do JSON recebido\n// =========================================================\nconst input = $input.all(); // pega todos os itens recebidos\nconst output = [];\n\nfor (const item of input) {\n  const candidato = item.json?.dados?.candidato;\n\n  // Verifica se o campo existe\n  if (candidato) {\n    output.push({ json: candidato });\n  }\n}\n\n// Se não houver candidato, retorna aviso\nif (output.length === 0) {\n  return [{ json: { erro: \"Nenhum dado de candidato encontrado\" } }];\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        1360
+      ],
+      "id": "bd92025e-ee41-4346-8bbe-3f84010e1c34",
+      "name": "Data_candidato"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um assistente de recrutamento especializado em análise de compatibilidade entre candidatos e empresas de tecnologia.\n\nA seguir estão os dados de compatibilidade entre o candidato e a vaga:\n\n{{ JSON.stringify($json, null, 2) }}\n\nCom base nas informações acima, gere **dois blocos de feedback** distintos:\n\n---\n\n🎯 **1️⃣ Feedback para o CANDIDATO (mensagem amigável e construtiva):**\n- Comece com um tom positivo, reconhecendo os pontos fortes (ex: boas habilidades técnicas, boa aderência cultural).\n- Aponte **as principais lacunas** que ele precisa desenvolver (ex: “precisa fortalecer conhecimentos em bancos de dados e Big Data”).\n- Sugira **3 treinamentos específicos** que ajudem a preencher essas lacunas, com links da nossa plataforma de cursos:\n  - Estrutura de Banco de Dados → [https://singuacademy.com/curso/bancos-de-dados](https://singuacademy.com/curso/bancos-de-dados)\n  - Fundamentos de Big Data → [https://singuacademy.com/curso/big-data](https://singuacademy.com/curso/big-data)\n  - Inteligência Artificial Aplicada → [https://singuacademy.com/curso/inteligencia-artificial](https://singuacademy.com/curso/inteligencia-artificial)\n- Termine com uma frase inspiradora (ex: “Cada aprendizado aproxima você da vaga ideal!”).\n\n---\n\n🏢 **2️⃣ Feedback para a EMPRESA (avaliação técnica e comportamental):**\n- Resuma o **nível de aderência técnica**, destacando se o candidato domina as ferramentas principais (ex: Python, SQL, Databricks, Azure).\n- Analise o **fit cultural**, comparando com os valores da empresa.\n- Indique um **nível de recomendação**:\n  - “Recomendado para próxima fase” (≥70%)\n  - “Recomendar após desenvolvimento” (entre 40% e 69%)\n  - “Não recomendado no momento” (<40%)\n- Adicione uma breve **recomendação de acompanhamento** (ex: “sugerimos convidar o candidato para o programa interno de formação em dados”).\n\n---\n\nA resposta deve estar em formato JSON estruturado, assim:\n\n{\n  \"feedback_candidato\": {\n    \"resumo\": \"...\",\n    \"melhorias\": [\"...\", \"...\"],\n    \"treinamentos_recomendados\": [\n      {\n        \"titulo\": \"Estrutura de Banco de Dados\",\n        \"link\": \"https://singuacademy.com/curso/bancos-de-dados\"\n      },\n      {\n        \"titulo\": \"Fundamentos de Big Data\",\n        \"link\": \"https://singuacademy.com/curso/big-data\"\n      },\n      {\n        \"titulo\": \"Inteligência Artificial Aplicada\",\n        \"link\": \"https://singuacademy.com/curso/inteligencia-artificial\"\n      }\n    ]\n  },\n  \"feedback_empresa\": {\n    \"resumo\": \"...\",\n    \"avaliacao_tecnica\": \"...\",\n    \"avaliacao_cultural\": \"...\",\n    \"recomendacao\": \"Recomendado / Requer Desenvolvimento / Não Recomendado\",\n    \"acao_sugerida\": \"...\"\n  }\n}\n",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        400,
+        1248
+      ],
+      "id": "7145ef2d-033b-4576-9676-0a5a41687172",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        400,
+        1408
+      ],
+      "id": "d740885d-1a06-4046-9dcc-4b7aa2f9b3be",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "o246sJ0WQ3qtx8Ck",
+          "name": "Google Gemini(PaLM) Api account 31"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        1264
+      ],
+      "id": "719008e3-aa6f-411d-a2f8-ae3eec1e8add",
+      "name": "normalização"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =========================================================\n// 🤖 Agente de Match Inteligente - Empresa x Candidato\n// =========================================================\n// Entrada esperada: 1 item JSON contendo dados combinados (empresa + candidato)\n\nconst input = $input.item.json;\n\n// -----------------------------------------------\n// 1️⃣ Compatibilidade Técnica (peso: 40%)\n// -----------------------------------------------\nconst requisitosTecnicos = input.requisitos?.competencias_tecnicas || [];\nconst habilidades = input.habilidades || [];\nconst matchTecnico =\n  requisitosTecnicos.length > 0\n    ? (habilidades.filter(h => requisitosTecnicos.map(r => r.toLowerCase()).includes(h.toLowerCase())).length /\n      requisitosTecnicos.length) * 100\n    : 0;\n\n// -----------------------------------------------\n// 2️⃣ Compatibilidade Comportamental (peso: 20%)\n// -----------------------------------------------\nconst competenciasComportamentais = input.requisitos?.competencias_comportamentais || [];\nconst comportamentaisCand = [\"Comunicação\", \"Colaboração\", \"Autonomia\"]; // pode vir de perfil do candidato\nconst matchComportamental =\n  competenciasComportamentais.length > 0\n    ? (comportamentaisCand.filter(c => competenciasComportamentais.map(r => r.toLowerCase()).includes(c.toLowerCase())).length /\n      competenciasComportamentais.length) * 100\n    : 0;\n\n// -----------------------------------------------\n// 3️⃣ Fit Cultural (peso: 30%)\n// -----------------------------------------------\nconst bigFiveVaga = input.perfil_cultural?.big_five_desejado || {};\nconst bigFiveCand = input.fit_cultural?.big_five || {};\nconst chavesBigFive = [\"abertura\", \"consciencia\", \"extroversao\", \"amabilidade\", \"neuroticismo\"];\n\nlet somaSimilaridade = 0;\nchavesBigFive.forEach(chave => {\n  const vagaVal = bigFiveVaga[chave] ?? 0;\n  const candVal = bigFiveCand[chave] ?? 0;\n  somaSimilaridade += 1 - Math.abs(vagaVal - candVal); // quanto mais próximo, maior o match\n});\nconst matchCultural = (somaSimilaridade / chavesBigFive.length) * 100;\n\n// -----------------------------------------------\n// 4️⃣ Geolocalização / Distância (peso: 10%)\n// -----------------------------------------------\nconst toRad = v => (v * Math.PI) / 180;\nconst R = 6371; // km\nconst lat1 = input.localizacao?.latitude ?? 0;\nconst lon1 = input.localizacao?.longitude ?? 0;\nconst lat2 = input.latitude ?? 0;\nconst lon2 = input.longitude ?? 0;\n\nconst dLat = toRad(lat2 - lat1);\nconst dLon = toRad(lon2 - lon1);\nconst a =\n  Math.sin(dLat / 2) * Math.sin(dLat / 2) +\n  Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);\nconst distancia = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));\n\nlet matchLocal = 100;\nif (input.raio_busca_km && distancia > input.raio_busca_km) {\n  matchLocal = Math.max(0, 100 - ((distancia - input.raio_busca_km) * 2));\n}\n\n// -----------------------------------------------\n// 5️⃣ Cálculo Final do Score\n// -----------------------------------------------\nconst score =\n  matchTecnico * 0.4 +\n  matchComportamental * 0.2 +\n  matchCultural * 0.3 +\n  matchLocal * 0.1;\n\n// -----------------------------------------------\n// 6️⃣ Resultado formatado\n// -----------------------------------------------\nreturn [\n  {\n    json: {\n      empresa: input.empresa_nome,\n      candidato: input.nome,\n      cargo: input.titulo,\n      score_total: Math.round(score),\n      detalhes: {\n        tecnico: Math.round(matchTecnico),\n        comportamental: Math.round(matchComportamental),\n        cultural: Math.round(matchCultural),\n        localizacao: Math.round(matchLocal),\n        distancia_km: Number(distancia.toFixed(2))\n      },\n      status: score >= 70 ? \"ALTA COMPATIBILIDADE\" : score >= 40 ? \"MÉDIA\" : \"BAIXA\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        1248
+      ],
+      "id": "3170c152-0b14-4099-9f99-aef6e0b91129",
+      "name": "Modelagem"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =========================================================\n// 🧩 Limpa o retorno do agente LLM e converte para JSON puro\n// =========================================================\n\n// Pega o texto bruto do input\nconst raw = $json.text || \"\";\n\n// Remove blocos de código markdown, espaços e quebras de linha extras\nconst cleaned = raw\n  .replace(/```json|```/gi, \"\") // remove marcadores de código\n  .replace(/\\\\n/g, \"\\n\")        // normaliza quebras de linha\n  .replace(/\\r/g, \"\")           // remove \\r\n  .trim();\n\n// Tenta converter o texto em objeto JSON\nlet parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (e) {\n  parsed = {\n    erro: \"❌ Falha ao converter texto em JSON\",\n    mensagem: e.message,\n    conteudo_original: cleaned.slice(0, 1000) // corta pra evitar payload gigante\n  };\n}\n\n// =========================================================\n// 🔄 Retorno único como data_array\n// =========================================================\nlet data_array = [];\n\n// Se contiver os dois feedbacks, insere ambos no array\nif (parsed.feedback_candidato || parsed.feedback_empresa) {\n  if (parsed.feedback_candidato) {\n    data_array.push({ tipo: \"candidato\", ...parsed.feedback_candidato });\n  }\n  if (parsed.feedback_empresa) {\n    data_array.push({ tipo: \"empresa\", ...parsed.feedback_empresa });\n  }\n} else {\n  // Se for JSON simples, joga inteiro dentro do array\n  data_array.push(parsed);\n}\n\n// Retorno padronizado\nreturn [\n  {\n    json: {\n      data_array\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        1248
+      ],
+      "id": "461df501-8771-4830-b35e-ab7607aff096",
+      "name": "Data_array"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Resposta",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        928,
+        1248
+      ],
+      "id": "5e5332e8-b3b9-4045-a209-0eca2ade5750"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - SinguHub Cadastro": {
+      "main": [
+        [
+          {
+            "node": "normalização",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Empressa": {
+      "main": [
+        [
+          {
+            "node": "Data_empressa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Candidato": {
+      "main": [
+        [
+          {
+            "node": "Data_candidato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data_empressa": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data_candidato": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Modelagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Data_array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normalização": {
+      "main": [
+        [
+          {
+            "node": "Empressa",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Candidato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modelagem": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data_array": {
+      "main": [
+        [
+          {
+            "node": "Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cc332358-1e79-45fb-b2f6-33c75c6eb350",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1dac8b887eea51519ca5afc1ee67507bd3d4d4d6a557d40e0f9cb92339e1953c"
+  },
+  "id": "6OCS7QmedVeqixRJ",
+  "tags": []
+}

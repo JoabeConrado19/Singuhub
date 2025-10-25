@@ -284,3 +284,109 @@ Desenvolvedor Full Stack / Blockchain
 
 🟢 **Tudo pronto!**  
 Agora você tem um backend NestJS integrado com Stripe e blockchain Ethereum rodando localmente com Ganache, e em produção validar hash de certificados com etherscan 🚀
+
+# Documentação do Workflow n8n: SinguHub Cadastro
+
+Este documento descreve o funcionamento do workflow n8n para o cadastro e análise de compatibilidade entre candidatos e vagas no sistema SinguHub.
+
+---
+
+## Visão Geral
+
+O workflow recebe dados via webhook (POST) na rota /singuhub-cadastro, contendo informações sobre uma empresa e um candidato. Após validações, os dados são extraídos, normalizados e processados para cálculo de compatibilidade técnica, comportamental, cultural e geográfica. O resultado é formatado e enviado como resposta.
+
+---
+
+![alt text](image-3.png)
+
+## Nodes e Funções
+
+### 1. Webhook - SinguHub Cadastro  
+- Tipo: Webhook  
+- Método HTTP: POST  
+- Caminho: /singuhub-cadastro  
+- Função: Recebe o payload inicial com dados da empresa e candidato.
+
+### 2. normalização  
+- Tipo: Code  
+- Função: Adiciona um campo auxiliar (myNewField) para normalização inicial dos dados recebidos.
+
+### 3. Empressa (If)  
+- Tipo: If  
+- Condição: Verifica se o campo empresa_nome está presente e não vazio no JSON recebido.  
+- Fluxo: Se verdadeiro, segue para extração dos dados da empresa.
+
+### 4. Candidato (If)  
+- Tipo: If  
+- Condição: Verifica se o campo candidato.nome está presente e não vazio no JSON recebido.  
+- Fluxo: Se verdadeiro, segue para extração dos dados do candidato.
+
+### 5. Data_empressa  
+- Tipo: Code  
+- Função: Extrai os dados da empresa do JSON recebido no webhook. Caso não encontre, retorna erro.
+
+### 6. Data_candidato  
+- Tipo: Code  
+- Função: Extrai os dados do candidato do JSON recebido no webhook. Caso não encontre, retorna erro.
+
+### 7. Merge  
+- Tipo: Merge (combineByPosition)  
+- Função: Combina os dados extraídos da empresa e do candidato em um único fluxo para processamento.
+
+### 8. Modelagem  
+- Tipo: Code  
+- Função:  
+  - Separa os dados da empresa e do candidato para cálculo.  
+  - Calcula a compatibilidade técnica (40%), comportamental (20%), fit cultural (30%) e localização (10%).  
+  - Utiliza dados como requisitos técnicos, competências comportamentais, perfil cultural (Big Five) e distância geográfica entre empresa e candidato.  
+  - Retorna um objeto com o score total, detalhamento por categoria e status de compatibilidade (Alta, Média, Baixa).
+
+### 9. Code in JavaScript  
+- Tipo: Code  
+- Função: Organiza os dados de saída para enviar para o modelo LLM e resposta final.
+
+### 10. Basic LLM Chain1  
+- Tipo: Langchain LLM Chain  
+- Função: Envia os dados para um modelo de linguagem (Google Gemini) para gerar feedback estruturado e empático para candidato e empresa, baseado nas regras definidas.
+
+### 11. Google Gemini Chat Model1  
+- Tipo: Modelo de IA Google Gemini  
+- Função: Processa a requisição do LLM Chain para análise de compatibilidade e geração de feedback.
+
+### 12. Data_array  
+- Tipo: Code  
+- Função: Limpa e formata o retorno do modelo LLM para JSON puro e estruturado.
+
+### 13. Resposta  
+- Tipo: Respond to Webhook  
+- Função: Envia a resposta final do workflow ao solicitante HTTP.
+
+---
+
+## Fluxo de Dados
+
+1. O webhook recebe os dados JSON com empresa e candidato.  
+2. Os nodes Empressa e Candidato validam presença dos dados essenciais.  
+3. Data_empressa e Data_candidato extraem dados específicos para processamento.  
+4. Merge junta as informações para análise conjunta.  
+5. Modelagem calcula scores de compatibilidade e gera o resultado detalhado.  
+6. O resultado é enviado para o modelo LLM para elaboração de feedback humano e estruturado.  
+7. A resposta final é formatada e enviada pelo node Resposta.
+
+---
+
+## Observações Técnicas
+
+- Compatibilidade técnica avaliada comparando habilidades do candidato com requisitos da vaga.  
+- Compatibilidade comportamental considera competências comportamentais desejadas.  
+- Fit cultural avalia similaridade no modelo Big Five entre candidato e vaga.  
+- Distância geográfica é calculada usando coordenadas GPS e aplicada penalização por raio máximo permitido.  
+- Pontuação final ponderada e classificada em três níveis: Alta (≥70%), Média (40–69%), Baixa (<40%).  
+- Feedbacks para candidato e empresa seguem formato JSON estrito, sem texto adicional.
+
+---
+
+## Referências
+
+- Curso sugerido para desenvolvimento: https://singuacademy.com/curso  
+- Modelo de linguagem Google Gemini para geração de feedback.

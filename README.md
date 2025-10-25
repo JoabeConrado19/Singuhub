@@ -283,4 +283,4 @@ Desenvolvedor Full Stack / Blockchain
 ---
 
 🟢 **Tudo pronto!**  
-Agora você tem um backend NestJS integrado com Stripe e blockchain Ethereum rodando localmente com Ganache 🚀
+Agora você tem um backend NestJS integrado com Stripe e blockchain Ethereum rodando localmente com Ganache, e em produção validar hash de certificados com etherscan 🚀
